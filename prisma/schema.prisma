@@ -1,0 +1,300 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OfferStatus {
+  DRAFT
+  PENDING_DEBTOR_ACKNOWLEDGEMENT
+  ACTIVE
+  ACKNOWLEDGED
+  LISTED
+  FUNDED
+  PARTIALLY_REPAID
+  SETTLED
+  REPAID
+  OVERDUE
+  DEFAULTED
+  DISPUTED
+  FROZEN
+  CANCELLED
+}
+
+enum OfferRisk {
+  LOW
+  MODERATE
+  ELEVATED
+}
+
+enum VerificationStatus {
+  PENDING
+  KYB_VERIFIED
+  SUSPENDED
+}
+
+enum UserRole {
+  BUSINESS
+  DEBTOR
+  INVESTOR
+  ADMIN
+}
+
+enum OperationStatus {
+  DRAFT
+  READY
+  PENDING_SIGNATURE
+  SUBMITTED
+  CONFIRMED
+  FAILED
+}
+
+enum ReviewStatus {
+  OPEN
+  APPROVED
+  REJECTED
+  FROZEN
+  RESOLVED
+}
+
+model BusinessProfile {
+  id                 String             @id @default(cuid())
+  name               String
+  industry           String
+  walletAddress      String?            @unique
+  verificationStatus VerificationStatus @default(PENDING)
+  metadataHash       String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  offers             Offer[]
+  workspaceUsers     WorkspaceUser[]
+
+  @@index([verificationStatus])
+  @@index([industry])
+}
+
+model DebtorProfile {
+  id            String   @id @default(cuid())
+  name          String
+  walletAddress String?  @unique
+  metadataHash  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  offers        Offer[]
+  workspaceUsers WorkspaceUser[]
+  repayments    Repayment[]
+}
+
+model InvestorProfile {
+  id                 String             @id @default(cuid())
+  name               String
+  walletAddress      String?            @unique
+  verificationStatus VerificationStatus @default(PENDING)
+  metadataHash       String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  workspaceUsers     WorkspaceUser[]
+  positions          FundingPosition[]
+
+  @@index([verificationStatus])
+}
+
+model WorkspaceUser {
+  id           String           @id @default(cuid())
+  role         UserRole
+  displayName  String
+  walletAddress String?
+  businessId   String?
+  debtorId     String?
+  investorId   String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  business     BusinessProfile? @relation(fields: [businessId], references: [id], onDelete: SetNull)
+  debtor       DebtorProfile?   @relation(fields: [debtorId], references: [id], onDelete: SetNull)
+  investor     InvestorProfile? @relation(fields: [investorId], references: [id], onDelete: SetNull)
+
+  @@index([role])
+  @@index([walletAddress])
+}
+
+model Offer {
+  id                     String              @id @default(cuid())
+  publicId               String              @unique
+  businessId             String
+  debtorId               String
+  category               String
+  summary                String
+  principalAmountCents   BigInt
+  fundingPriceCents      BigInt
+  expectedRepaymentCents BigInt
+  repaymentAsset         String
+  dueDate                DateTime
+  status                 OfferStatus         @default(DRAFT)
+  risk                   OfferRisk           @default(MODERATE)
+  fundedBasisPoints      Int                 @default(0)
+  metadataHash           String
+  onchainOfferId         String?
+  offerRegistryContract  String?
+  marketplaceContract    String?
+  settlementContract     String?
+  lastIndexedLedger      Int?
+  lastIndexedAt          DateTime?
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  business               BusinessProfile     @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  debtor                 DebtorProfile       @relation(fields: [debtorId], references: [id], onDelete: Restrict)
+  notes                  OfferNote[]
+  proofItems             OfferProofItem[]
+  timeline               OfferTimelineItem[]
+  fundingPositions       FundingPosition[]
+  repayments             Repayment[]
+  adminReviews           AdminReview[]
+  contractOperations     ContractOperation[]
+
+  @@index([status, dueDate])
+  @@index([risk])
+  @@index([category])
+  @@index([onchainOfferId])
+}
+
+model FundingPosition {
+  id                  String          @id @default(cuid())
+  offerId             String
+  investorId          String
+  amountFundedCents   BigInt
+  expectedReturnCents BigInt
+  status              OperationStatus @default(READY)
+  txHash              String?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  offer               Offer           @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  investor            InvestorProfile @relation(fields: [investorId], references: [id], onDelete: Restrict)
+
+  @@index([offerId])
+  @@index([investorId, status])
+}
+
+model Repayment {
+  id              String          @id @default(cuid())
+  offerId         String
+  debtorId        String
+  amountCents     BigInt
+  remainingCents  BigInt
+  status          OperationStatus @default(READY)
+  txHash          String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  offer           Offer           @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  debtor          DebtorProfile   @relation(fields: [debtorId], references: [id], onDelete: Restrict)
+
+  @@index([offerId])
+  @@index([debtorId, status])
+}
+
+model AdminReview {
+  id          String       @id @default(cuid())
+  offerId     String?
+  subject     String
+  reason      String
+  status      ReviewStatus @default(OPEN)
+  severity    String       @default("Medium")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  offer       Offer?       @relation(fields: [offerId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([offerId])
+}
+
+model ContractOperation {
+  id             String          @id @default(cuid())
+  offerId        String?
+  operation      String
+  contractId     String
+  method         String
+  args           Json
+  status         OperationStatus @default(READY)
+  walletAddress  String?
+  txHash         String?
+  errorMessage   String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  offer          Offer?          @relation(fields: [offerId], references: [id], onDelete: SetNull)
+
+  @@index([offerId])
+  @@index([status])
+  @@index([contractId, method])
+}
+
+model OfferNote {
+  id        String   @id @default(cuid())
+  offerId   String
+  body      String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  offer     Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@index([offerId, sortOrder])
+}
+
+model OfferProofItem {
+  id        String   @id @default(cuid())
+  offerId   String
+  label     String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  offer     Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@index([offerId, sortOrder])
+}
+
+model OfferTimelineItem {
+  id        String   @id @default(cuid())
+  offerId   String
+  label     String
+  value     String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  offer     Offer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@index([offerId, sortOrder])
+}
+
+model ContractDeployment {
+  id                String   @id @default(cuid())
+  network           String
+  passphrase        String
+  deployerPublicKey String
+  version           Int
+  factory           String
+  config            String
+  verification      String
+  offerRegistry     String
+  marketplace       String
+  settlement        String
+  riskRegistry      String
+  fractionalization String
+  wasmHashes        Json
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([network, version])
+}
+
+model IndexedContractEvent {
+  id            String   @id @default(cuid())
+  contractId    String
+  eventType     String
+  offerPublicId String?
+  ledger        Int
+  txHash        String
+  payload       Json
+  observedAt    DateTime @default(now())
+
+  @@unique([contractId, txHash, eventType])
+  @@index([offerPublicId])
+  @@index([contractId, ledger])
+}
