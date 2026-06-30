@@ -11,7 +11,7 @@ export interface ModalProps extends Omit<HTMLAttributes<HTMLDivElement>, "onClos
   /** Callback when the modal should close */
   onClose: () => void;
   /** Modal title */
-  title?: string | ReactNode;
+  title?: string;
   /** Modal content */
   children?: ReactNode;
   /** Size of the modal */

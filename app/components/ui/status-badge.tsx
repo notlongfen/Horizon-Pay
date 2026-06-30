@@ -47,7 +47,7 @@ function getStatusVariant(status: string): StatusBadgeVariant {
     DRAFT: "default",
     PENDING_DEBTOR_ACKNOWLEDGEMENT: "warning",
     ACTIVE: "success",
-    ACKNOWLEDGED: "success",
+    ACKNOWLEDGED: "success", // Legacy - kept for backward compatibility
     LISTED: "active",
     FUNDED: "success",
     PARTIALLY_REPAID: "warning",
@@ -72,7 +72,7 @@ function getDisplayLabel(status: string): string {
     DRAFT: "Draft",
     PENDING_DEBTOR_ACKNOWLEDGEMENT: "Pending ACK",
     ACTIVE: "Active",
-    ACKNOWLEDGED: "Acknowledged",
+    ACKNOWLEDGED: "Active", // Legacy - maps to same as ACTIVE
     LISTED: "Listed",
     FUNDED: "Funded",
     PARTIALLY_REPAID: "Partially Repaid",
