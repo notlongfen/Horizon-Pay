@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useWallet } from "@/app/components/wallet-provider";
-import { useInvestorVerificationStatus } from "@/lib/hooks";
+import { useDebtorVerificationStatus } from "@/lib/hooks";
 
-interface InvestorVerificationClientPageProps {
+interface DebtorVerificationClientPageProps {
   initialWallet?: string;
 }
 
@@ -15,29 +15,29 @@ import { Particles } from "@/app/components/particles";
 import { ScrollParallax } from "@/app/components/scroll-parallax";
 import { SiteNav } from "@/app/components/site-nav";
 import { SectionLabel, Card } from "@/app/components/ui";
-import { InvestorKYCForm } from "./investor-kyc-form";
+import { DebtorKYCForm } from "./debtor-kyc-form";
 import { MetricCardsSkeleton } from "@/lib/utils/loading";
 
 // Metadata moved to layout since this is now a client component
 // export const metadata: Metadata = {
-//   title: "Investor KYC Verification | HorizonPay",
+//   title: "Debtor Verification | HorizonPay",
 //   description:
-//     "Complete your Know Your Customer verification to unlock full access to HorizonPay features as an investor.",
+//     "Complete your debtor verification to acknowledge receivable Offers on HorizonPay.",
 //   openGraph: {
-//     title: "Investor KYC Verification | HorizonPay",
+//     title: "Debtor Verification | HorizonPay",
 //     description:
-//       "Submit your investor documents for KYC verification and start funding receivable Offers.",
+//       "Submit your debtor verification documents to start acknowledging receivable obligations.",
 //     type: "website",
 //   },
 // };
 
-export function InvestorVerificationClientPage({ initialWallet }: InvestorVerificationClientPageProps = {}) {
+export function DebtorVerificationClientPage({ initialWallet }: DebtorVerificationClientPageProps = {}) {
   const router = useRouter();
   const { address: walletAddress, isConnected } = useWallet();
   // Use custom hook for data fetching
   // Use initial wallet if provided, otherwise fall back to connected wallet
   const effectiveWallet = initialWallet || walletAddress || "";
-  const { data: verificationData, isLoading, isError, error } = useInvestorVerificationStatus(
+  const { data: verificationData, isLoading, isError, error } = useDebtorVerificationStatus(
     effectiveWallet
   );
 
@@ -123,7 +123,7 @@ export function InvestorVerificationClientPage({ initialWallet }: InvestorVerifi
     );
   }
 
-  if (!walletAddress) {
+  if (!walletAddress && !initialWallet) {
     return null; // Will redirect
   }
 
@@ -153,18 +153,18 @@ export function InvestorVerificationClientPage({ initialWallet }: InvestorVerifi
 
       <section className="parallax-section mx-auto max-w-7xl px-5 pb-20 pt-32">
         <div className="max-w-4xl">
-          <SectionLabel>Investor KYC Verification</SectionLabel>
+          <SectionLabel>Debtor Verification</SectionLabel>
           <h1 className="text-balance text-5xl font-semibold leading-[0.96] tracking-tight sm:text-6xl">
-            Verify your investor identity to{" "}
-            <span className="ice-gradient">unlock full access</span>
+            Verify your debtor identity to{" "}
+            <span className="ice-gradient">acknowledge receivable obligations</span>
           </h1>
           <p className="mt-6 max-w-xl text-base leading-7 text-white/64 sm:text-lg sm:leading-8">
-            Complete Know Your Customer verification to fund receivable Offers
-            and access HorizonPay&apos;s full investment capabilities.
+            Complete debtor verification to acknowledge and repay receivable Offers
+            on HorizonPay.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
             <Link
-              href="/dashboard/investor"
+              href="/dashboard/debtor"
               className="glass-button inline-flex min-h-11 items-center rounded-full px-5 text-sm font-medium text-white transition focus:outline-none focus:ring-2 focus:ring-cyan-200 focus:ring-offset-2 focus:ring-offset-[#020504]"
             >
               Back to Dashboard
@@ -173,7 +173,7 @@ export function InvestorVerificationClientPage({ initialWallet }: InvestorVerifi
         </div>
       </section>
 
-      <InvestorKYCForm
+      <DebtorKYCForm
         walletAddress={walletAddress}
         initialProfile={profile}
         initialDocuments={documents}
@@ -182,3 +182,6 @@ export function InvestorVerificationClientPage({ initialWallet }: InvestorVerifi
     </main>
   );
 }
+
+// Default export for backward compatibility
+export default DebtorVerificationClientPage;

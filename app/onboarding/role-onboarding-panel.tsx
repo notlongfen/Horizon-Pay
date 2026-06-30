@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { useWallet } from "../components/wallet-provider";
 
 type RoleKey = "business" | "investor" | "debtor";
 
@@ -26,9 +27,9 @@ const roleOptions: RoleOption[] = [
     description:
       "For clinics, agencies, suppliers, merchants, subscription companies, and other businesses that need liquidity from future payments.",
     verification: "Business KYB and receivable backing review",
-    primaryAction: "Prepare KYB profile",
+    primaryAction: "Start KYB Verification",
     secondaryAction: "Create Offer after approval",
-    primaryHref: "/dashboard/admin#operations",
+    primaryHref: "/verification/business",
     secondaryHref: "/offers/create",
     actions: [
       "Connect the wallet that will receive funded liquidity.",
@@ -43,9 +44,9 @@ const roleOptions: RoleOption[] = [
     description:
       "For verified funders comparing Offer backing, due dates, repayment asset, risk context, and debtor acknowledgement.",
     verification: "Investor eligibility and disclosure acceptance",
-    primaryAction: "Start investor checks",
+    primaryAction: "Start KYC Verification",
     secondaryAction: "Browse Offers",
-    primaryHref: "/dashboard/admin#operations",
+    primaryHref: "/verification/investor",
     secondaryHref: "/marketplace",
     actions: [
       "Connect the wallet that will fund listed Offers.",
@@ -60,9 +61,9 @@ const roleOptions: RoleOption[] = [
     description:
       "For customers or counterparties reviewing the amount, backing, due date, and repayment status of an Offer created by a verified business.",
     verification: "Wallet ownership or invited account verification",
-    primaryAction: "Confirm invitation",
+    primaryAction: "Start Verification",
     secondaryAction: "Review Offer details",
-    primaryHref: "/dashboard/debtor#operations",
+    primaryHref: "/verification/debtor",
     secondaryHref: "/dashboard/debtor#operations",
     actions: [
       "Connect or confirm the invited debtor wallet.",
@@ -74,11 +75,14 @@ const roleOptions: RoleOption[] = [
 
 export function RoleOnboardingPanel() {
   const [selectedRole, setSelectedRole] = useState<RoleKey>("business");
+  const { address: walletAddress } = useWallet();
 
   const activeRole = useMemo(
     () => roleOptions.find((role) => role.key === selectedRole) ?? roleOptions[0],
     [selectedRole],
   );
+
+  const primaryHrefWithWallet = activeRole.primaryHref;
 
   return (
     <div className="onboarding-role-panel">
@@ -114,7 +118,7 @@ export function RoleOnboardingPanel() {
         </ol>
 
         <div className="onboarding-role-actions">
-          <Link href={activeRole.primaryHref} className="star-button">
+          <Link href={primaryHrefWithWallet} className="star-button">
             {activeRole.primaryAction}
           </Link>
           <Link href={activeRole.secondaryHref} className="glass-button">

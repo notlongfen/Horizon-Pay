@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BorderGlow } from "@/app/components/border-glow";
 import { Particles } from "@/app/components/particles";
 import { ScrollParallax } from "@/app/components/scroll-parallax";
 import { SiteNav } from "@/app/components/site-nav";
 import { WalletConnectButton } from "@/app/components/wallet-provider";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { getHorizonPayContracts } from "@/lib/contracts/horizonpay-contracts";
+import { Card, SectionLabel, StatusBadge, ArrowGlyph } from "@/app/components/ui";
+import { formatCents, titleCase, formatLongDate } from "@/lib/utils";
+
+function statusLabel(status: string) {
+  return titleCase(status);
+}
 
 export const metadata: Metadata = {
   title: "Acknowledge Offer | HorizonPay",
@@ -29,21 +34,9 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-import { formatCents, titleCase, formatLongDate } from "@/lib/utils";
+import { getVerificationLabel } from "@/lib/utils";
 
-function statusLabel(status: string) {
-  return titleCase(status)
-    .toLowerCase()
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-function verificationLabel(status: string) {
-  if (status === "KYB_VERIFIED") return "KYB verified";
-  if (status === "SUSPENDED") return "Verification suspended";
-  return "Verification pending";
-}
+// Use the centralized verification label utility
 
 function riskLabel(risk: string) {
   if (risk === "LOW") return "Low";
@@ -56,21 +49,7 @@ function daysUntil(date: Date) {
   return Math.max(0, Math.ceil(diffMs / 86_400_000));
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="section-label mb-5 w-fit rounded-full px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">
-      {children}
-    </p>
-  );
-}
 
-function ArrowGlyph() {
-  return (
-    <span aria-hidden="true" className="ml-2 inline-block text-cyan-950">
-      -&gt;
-    </span>
-  );
-}
 
 function AcknowledgementObject() {
   return (
@@ -132,7 +111,7 @@ function OfferSummaryCard({ offer, business }: {
   const dueInDays = daysUntil(offer.dueDate);
 
   return (
-    <BorderGlow className="glass-panel ack-summary-card p-6 sm:p-8">
+    <Card variant="glass" padding="md" className="ack-summary-card">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-100/70">
@@ -157,7 +136,7 @@ function OfferSummaryCard({ offer, business }: {
             {business.industry || "Verified business"}
           </p>
           <p className="mt-2 text-xs text-white/46">
-            {verificationLabel(business.verificationStatus)}
+            {getVerificationLabel(business.verificationStatus)}
           </p>
         </div>
 
@@ -223,7 +202,7 @@ function OfferSummaryCard({ offer, business }: {
           </p>
         </div>
       </div>
-    </BorderGlow>
+    </Card>
   );
 }
 
@@ -232,7 +211,7 @@ function OfferDetailsSection({ offer, business }: {
   business: any;
 }) {
   return (
-    <BorderGlow className="glass-panel p-6 sm:p-8">
+    <Card variant="glass" padding="md">
       <p className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-100/70">
         Offer Details
       </p>
@@ -294,13 +273,13 @@ function OfferDetailsSection({ offer, business }: {
           </div>
         </div>
       )}
-    </BorderGlow>
+    </Card>
   );
 }
 
 function BusinessProfileSection({ business }: { business: any }) {
   return (
-    <BorderGlow className="glass-panel p-6 sm:p-8">
+    <Card variant="glass" padding="md">
       <p className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-100/70">
         Business Profile
       </p>
@@ -318,7 +297,7 @@ function BusinessProfileSection({ business }: { business: any }) {
               Verification
             </p>
             <p className="mt-1 text-sm font-semibold text-cyan-100">
-              {verificationLabel(business.verificationStatus)}
+              {getVerificationLabel(business.verificationStatus)}
             </p>
           </div>
         </div>
@@ -345,13 +324,13 @@ function BusinessProfileSection({ business }: { business: any }) {
           </p>
         </div>
       </div>
-    </BorderGlow>
+    </Card>
   );
 }
 
 function AcknowledgementActions({ offerId }: { offerId: string }) {
   return (
-    <BorderGlow className="glass-panel ack-actions-panel p-6 sm:p-8">
+    <Card variant="glass" padding="md" className="ack-actions-panel">
       <p className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-100/70">
         Your Action
       </p>
@@ -404,13 +383,13 @@ function AcknowledgementActions({ offerId }: { offerId: string }) {
           View All Offers
         </Link>
       </div>
-    </BorderGlow>
+    </Card>
   );
 }
 
 function SecurityNotice() {
   return (
-    <BorderGlow className="glass-panel p-5 sm:p-6">
+    <Card variant="glass" padding="sm">
       <div className="flex items-start gap-4">
         <div className="flex-shrink-0">
           <div className="h-8 w-8 rounded-full border border-cyan-400/30 bg-cyan-400/10 flex items-center justify-center">
@@ -428,7 +407,7 @@ function SecurityNotice() {
           </p>
         </div>
       </div>
-    </BorderGlow>
+    </Card>
   );
 }
 
@@ -494,7 +473,7 @@ export default async function AcknowledgeOfferPage({
       </div>
 
       <section className="parallax-section px-5 pb-10 pt-20">
-        <BorderGlow className="glass-panel mx-auto max-w-7xl overflow-hidden p-7 sm:p-10 lg:p-12">
+        <Card variant="glass" padding="lg" className="mx-auto max-w-7xl overflow-hidden">
           <footer className="flex flex-col gap-4 border-t border-white/10 pt-6 text-sm text-white/46 sm:flex-row sm:items-center sm:justify-between">
             <p>HorizonPay. Verified receivables funding on Stellar.</p>
             <div className="flex gap-5">
@@ -507,12 +486,12 @@ export default async function AcknowledgeOfferPage({
               <Link href={`/dashboard/debtor?offer=${offer.publicId}#operations`} className="hover:text-white">
                 Dashboard
               </Link>
-              <Link href="/onboarding" className="hover:text-white">
-                Onboarding
+              <Link href="/dashboard" className="hover:text-white">
+                Get Started
               </Link>
             </div>
           </footer>
-        </BorderGlow>
+        </Card>
       </section>
     </main>
   );

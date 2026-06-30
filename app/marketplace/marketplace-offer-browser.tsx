@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BorderGlow } from "../components/border-glow";
+import { Card } from "../components/ui";
 import { OfferFilterPanel, offerTypeOptions } from "./offer-filter-panel";
 import type { MarketplaceOffer } from "@/lib/marketplace/marketplace-types";
 
@@ -247,7 +247,7 @@ export function MarketplaceOfferBrowser({ offers }: MarketplaceOfferBrowserProps
     <>
       <section className="parallax-section mx-auto max-w-7xl px-5 py-24">
         <h2 className="sr-only">Offer marketplace</h2>
-        <BorderGlow className="glass-panel p-4 sm:p-5">
+        <Card variant="glass" padding="sm">
           <div className="mb-5">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100/70">
@@ -264,11 +264,11 @@ export function MarketplaceOfferBrowser({ offers }: MarketplaceOfferBrowserProps
             onQueryChange={setQuery}
             onSelectedTypeChange={setSelectedType}
           />
-        </BorderGlow>
+        </Card>
 
         <div className="mt-6 grid gap-5 lg:grid-cols-3">
           {filteredOffers.map((offer) => (
-            <BorderGlow key={offer.id} className="glass-panel offer-card">
+            <Card key={offer.id} variant="glass" className="offer-card">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="font-mono text-sm text-cyan-200">{offer.id}</p>
@@ -321,11 +321,11 @@ export function MarketplaceOfferBrowser({ offers }: MarketplaceOfferBrowserProps
                   <span aria-hidden="true" className="opacity-70">→</span>
                 </button>
               </div>
-            </BorderGlow>
+            </Card>
           ))}
         </div>
         {filteredOffers.length === 0 ? (
-          <BorderGlow className="glass-panel marketplace-empty-state mt-6">
+          <Card variant="glass" className="marketplace-empty-state mt-6">
             <p>No Offers match those filters.</p>
             <button
               type="button"
@@ -337,7 +337,7 @@ export function MarketplaceOfferBrowser({ offers }: MarketplaceOfferBrowserProps
             >
               Reset filters
             </button>
-          </BorderGlow>
+          </Card>
         ) : null}
       </section>
 

@@ -3,10 +3,11 @@ import Link from "next/link";
 import { getHorizonPayContracts } from "@/lib/contracts/horizonpay-contracts";
 import { getPrismaClient } from "@/lib/db/prisma";
 import { CreateOfferForm } from "./create-offer-form";
-import { BorderGlow } from "@/app/components/border-glow";
+import { Card, SectionLabel, ArrowGlyph } from "@/app/components/ui";
 import { Particles } from "@/app/components/particles";
 import { ScrollParallax } from "@/app/components/scroll-parallax";
 import { SiteNav } from "@/app/components/site-nav";
+import { isVerificationApproved } from "@/lib/utils";
 
 const categories = [
   "Invoice",
@@ -59,21 +60,7 @@ export const metadata: Metadata = {
   },
 };
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="section-label mb-5 w-fit rounded-full px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">
-      {children}
-    </p>
-  );
-}
 
-function ArrowGlyph() {
-  return (
-    <span aria-hidden="true" className="ml-2 inline-block text-cyan-950">
-      -&gt;
-    </span>
-  );
-}
 
 async function getBusinessProfile(walletAddress: string | undefined) {
   if (!walletAddress) return null;
@@ -98,8 +85,7 @@ export default async function CreateOfferPage({
   const businessWallet = params?.business;
 
   const businessProfile = await getBusinessProfile(businessWallet);
-  const isVerifiedBusiness =
-    businessProfile?.verificationStatus === "KYB_VERIFIED";
+  const isVerifiedBusiness = isVerificationApproved(businessProfile?.verificationStatus);
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#020504] text-white">
@@ -129,7 +115,7 @@ export default async function CreateOfferPage({
         id="form"
         className="parallax-section mx-auto max-w-7xl px-5 pt-32 pb-16"
       >
-        <BorderGlow className="glass-panel p-6 sm:p-8 lg:p-10">
+        <Card padding="lg">
           <h1 className="text-3xl font-semibold text-white mb-8 text-center ice-gradient">Create Offer</h1>
           <CreateOfferForm
             businessProfile={businessProfile}
@@ -137,12 +123,12 @@ export default async function CreateOfferPage({
             categories={categories}
             industries={industries}
           />
-        </BorderGlow>
+        </Card>
       </section>
 
       {/* Flow Explanation Section */}
       <section className="parallax-section px-5 pb-10 pt-20">
-        <BorderGlow className="glass-panel mx-auto max-w-7xl overflow-hidden p-7 sm:p-10 lg:p-14">
+        <Card padding="lg" overflowHidden>
           <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
             <div>
               <SectionLabel>How it works</SectionLabel>
@@ -173,14 +159,11 @@ export default async function CreateOfferPage({
                   desc: "List for funding. Investors provide liquidity.",
                 },
               ].map((item) => (
-                <BorderGlow
-                  key={item.step}
-                  className="glass-panel create-flow-card"
-                >
+                <Card key={item.step} padding="sm" className="create-flow-card">
                   <span className="text-sm text-cyan-100/60">{item.step}</span>
                   <h3 className="mt-2 text-xl font-semibold">{item.title}</h3>
                   <p className="mt-3 text-sm text-white/58">{item.desc}</p>
-                </BorderGlow>
+                </Card>
               ))}
             </div>
           </div>
@@ -198,7 +181,7 @@ export default async function CreateOfferPage({
               </Link>
             </div>
           </footer>
-        </BorderGlow>
+        </Card>
       </section>
     </main>
   );
