@@ -47,3 +47,6 @@ skills-lock.json
 .agents
 generated
 .vibe
+prisma/migrations
+*.py
+contracts
