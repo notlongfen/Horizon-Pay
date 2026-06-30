@@ -18,7 +18,6 @@ const preservedQueryKeys = [
   "offerId",
   "action",
   "reviewId",
-  "wallet",
 ] as const;
 
 function getActiveRoleFromPath(pathname: string): DashboardRole {
@@ -62,15 +61,15 @@ export function RoleSwitcher() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-5 pt-28 pb-4">
-      <nav className="glass-panel flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-white/10 p-1.5">
+    <div className="mx-auto max-w-4xl px-5 pt-32 pb-6">
+      <nav className="glass-panel flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-white/10 p-2">
         {roleItems.map((item) => {
           const isActive = item.role === activeRole;
           return (
             <Link
               key={item.role}
               href={roleHref(item.role)}
-              className={`px-8 py-4 text-base font-medium rounded-2xl transition-colors ${
+              className={`px-10 py-5 text-lg font-medium rounded-xl transition-colors ${
                 isActive
                   ? "bg-cyan-200/15 text-cyan-100 border border-cyan-200/30"
                   : "text-white/64 hover:text-white hover:bg-white/5"

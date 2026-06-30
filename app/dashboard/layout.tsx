@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { BorderGlow } from "../components/border-glow";
+import { Card } from "../components/ui";
 import { Particles } from "../components/particles";
 import { ScrollParallax } from "../components/scroll-parallax";
 import { SiteNav } from "../components/site-nav";
@@ -39,7 +39,7 @@ export default function DashboardLayout({
         alphaParticles
       />
 
-      <SiteNav activeRoute="marketplace" />
+      <SiteNav activeRoute="dashboard" showWalletConnect={true} />
 
       {/* Role Switcher */}
       <Suspense fallback={null}>
@@ -49,7 +49,7 @@ export default function DashboardLayout({
       <section className="dashboard-content px-5">{children}</section>
 
       <section className="parallax-section px-5 pb-10 pt-20">
-        <BorderGlow className="glass-panel mx-auto max-w-7xl overflow-hidden p-7 sm:p-10 lg:p-12">
+        <Card padding="lg" overflowHidden>
           <footer className="flex flex-col gap-4 border-t border-white/10 pt-6 text-sm text-white/46 sm:flex-row sm:items-center sm:justify-between">
             <p>HorizonPay. Verified receivables funding on Stellar.</p>
             <div className="flex gap-5">
@@ -59,12 +59,9 @@ export default function DashboardLayout({
               <Link href="/marketplace" className="hover:text-white">
                 Offers
               </Link>
-              <Link href="/onboarding" className="hover:text-white">
-                Onboarding
-              </Link>
             </div>
           </footer>
-        </BorderGlow>
+        </Card>
       </section>
     </main>
   );

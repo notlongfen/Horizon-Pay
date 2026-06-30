@@ -9,7 +9,9 @@ import type {
 } from "@/lib/workspace/workspace-types";
 import { useWallet, NetworkBadge } from "../components/wallet-provider";
 import { formatStellarAddress } from "@/lib/utils";
-import { BorderGlow } from "../components/border-glow";
+import { getContractReadiness } from "@/lib/contracts/contract-readiness";
+import type { ContractReadiness } from "@/lib/contracts/contract-readiness";
+import { Card, StatusBadge } from "../components/ui";
 import { OfferDetailsPanel } from "../workspace/components/offer-details";
 import { OperationPanel } from "../workspace/components/operation-panel";
 import type {
@@ -41,7 +43,12 @@ const roleActions: Record<WorkspaceRole, WorkspaceAction[]> = {
   business: ["List Offer"],
   debtor: ["Acknowledge", "Repay Full", "Open Dispute"],
   investor: ["Fund Offer"],
-  admin: ["Freeze Offer", "Verify Business", "Verify Debtor", "Verify Investor"],
+  admin: [
+    "Freeze Offer",
+    "Verify Business",
+    "Verify Debtor",
+    "Verify Investor",
+  ],
 };
 
 function displayStatus(status: string): OfferDisplayStatus {
@@ -114,13 +121,23 @@ function actionCopy(action: WorkspaceAction) {
 }
 
 function canRunAction(action: WorkspaceAction, offer: OfferRow | null) {
-  if (["Verify Business", "Verify Debtor", "Verify Investor"].includes(action)) {
+  if (
+    ["Verify Business", "Verify Debtor", "Verify Investor"].includes(action)
+  ) {
     return true;
   }
 
   if (!offer) return false;
 
-  if (["List Offer", "Fund Offer", "Repay", "Repay Full", "Freeze Offer"].includes(action)) {
+  if (
+    [
+      "List Offer",
+      "Fund Offer",
+      "Repay",
+      "Repay Full",
+      "Freeze Offer",
+    ].includes(action)
+  ) {
     return Boolean(offer.onchainOfferId);
   }
 
@@ -128,7 +145,9 @@ function canRunAction(action: WorkspaceAction, offer: OfferRow | null) {
 }
 
 function actionFields(action: WorkspaceAction) {
-  if (["Verify Business", "Verify Debtor", "Verify Investor"].includes(action)) {
+  if (
+    ["Verify Business", "Verify Debtor", "Verify Investor"].includes(action)
+  ) {
     const targetWallet = window.prompt("Wallet address to verify");
     return targetWallet ? { targetWallet } : null;
   }
@@ -139,7 +158,10 @@ function actionFields(action: WorkspaceAction) {
   }
 
   if (action === "Open Dispute") {
-    const disputeReason = window.prompt("Dispute reason", "Terms require review");
+    const disputeReason = window.prompt(
+      "Dispute reason",
+      "Terms require review",
+    );
     return disputeReason ? { disputeReason } : null;
   }
 
@@ -147,11 +169,15 @@ function actionFields(action: WorkspaceAction) {
 }
 
 async function readApiResponse<T>(response: Response): Promise<T> {
-  const payload = (await response.json().catch(() => null)) as ApiResponse<T> | null;
+  const payload = (await response
+    .json()
+    .catch(() => null)) as ApiResponse<T> | null;
 
   if (!response.ok || !payload?.success || !payload.data) {
     throw new Error(
-      payload?.error?.message ?? payload?.message ?? "The operation could not be completed.",
+      payload?.error?.message ??
+        payload?.message ??
+        "The operation could not be completed.",
     );
   }
 
@@ -166,10 +192,10 @@ export function DashboardOperationsClient({
   reviewId,
 }: DashboardOperationsClientProps) {
   // Wallet from context
-  const { 
-    address: walletAddress, 
-    network: walletNetwork, 
-    connect: handleConnectWallet, 
+  const {
+    address: walletAddress,
+    network: walletNetwork,
+    connect: handleConnectWallet,
     disconnect: handleDisconnectWallet,
     signTransaction,
   } = useWallet();
@@ -178,22 +204,125 @@ export function DashboardOperationsClient({
     () => data.roles.find((item) => item.role === role) ?? data.roles[0],
     [data.roles, role],
   );
-  const offers = useMemo(() => workspace.offers.map(toOfferRow), [workspace.offers]);
+  const offers = useMemo(
+    () => workspace.offers.map(toOfferRow),
+    [workspace.offers],
+  );
   const [selectedOfferId, setSelectedOfferId] = useState<string | undefined>(
     initialOfferId ?? offers[0]?.id,
   );
-  const [operation, setOperation] = useState<ContractOperationView | null>(null);
+  const [operation, setOperation] = useState<ContractOperationView | null>(
+    null,
+  );
   const [isPreparing, setIsPreparing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(
     initialAction ? `${initialAction} is ready to prepare.` : null,
   );
+  const [contractReadiness, setContractReadiness] =
+    useState<ContractReadiness | null>(null);
 
   const selectedOffer = useMemo(
     () => offers.find((offer) => offer.id === selectedOfferId) ?? null,
     [offers, selectedOfferId],
   );
+
+  // Fetch contract readiness when wallet connects or changes
+  useEffect(() => {
+    if (walletAddress) {
+      getContractReadiness({ walletAddress })
+        .then(setContractReadiness)
+        .catch(() => setContractReadiness(null));
+    } else {
+      setContractReadiness(null);
+    }
+  }, [walletAddress]);
+
+  // Check if action can run based on offer state AND wallet verification
+  function canRunActionWithVerification(
+    action: WorkspaceAction,
+    offer: OfferRow | null,
+  ) {
+    if (!canRunAction(action, offer)) return false;
+
+    // Map actions to required verification status
+    const verificationRequirement: Record<
+      WorkspaceAction,
+      keyof ContractReadiness | null
+    > = {
+      "Create Offer": null,
+      "List Offer": "businessVerified",
+      Acknowledge: "debtorVerified",
+      "Fund Offer": "investorVerified",
+      Repay: "debtorVerified",
+      "Repay Full": "debtorVerified",
+      "Open Dispute": null,
+      "Cancel Offer": null,
+      "Freeze Offer": null,
+      "Verify Business": null,
+      "Verify Debtor": null,
+      "Verify Investor": null,
+      "Enable Asset": null,
+    };
+
+    const required = verificationRequirement[action];
+    if (required && contractReadiness?.[required] !== true) {
+      return false;
+    }
+
+    return true;
+  }
+
+  // Get tooltip message for disabled actions
+  function getActionDisabledTitle(
+    action: WorkspaceAction,
+    readiness: ContractReadiness | null,
+    wallet: string | undefined,
+  ): string | undefined {
+    if (!wallet) return "Connect your wallet to perform this action";
+    if (!selectedOffer) return "Select an Offer first";
+
+    const verificationRequirement: Record<
+      WorkspaceAction,
+      keyof ContractReadiness | null
+    > = {
+      "Create Offer": null,
+      "List Offer": "businessVerified",
+      Acknowledge: "debtorVerified",
+      "Fund Offer": "investorVerified",
+      Repay: "debtorVerified",
+      "Repay Full": "debtorVerified",
+      "Open Dispute": null,
+      "Cancel Offer": null,
+      "Freeze Offer": null,
+      "Verify Business": null,
+      "Verify Debtor": null,
+      "Verify Investor": null,
+      "Enable Asset": null,
+    };
+
+    const required = verificationRequirement[action];
+    if (required && readiness?.[required] !== true) {
+      const labels: Record<keyof ContractReadiness, string> = {
+        businessVerified: "Verify your business wallet on-chain first",
+        debtorVerified: "Verify your debtor wallet on-chain first",
+        investorVerified: "Verify your investor wallet on-chain first",
+        suspended: "",
+        supportedAsset: "",
+        repaymentAsset: "",
+        walletAddress: "",
+        checks: "",
+      };
+      return labels[required];
+    }
+
+    if (!canRunAction(action, selectedOffer)) {
+      return "This action requires the Offer to be on-chain";
+    }
+
+    return undefined;
+  }
 
   async function prepareOperation(action: WorkspaceAction, offerId?: string) {
     setError(null);
@@ -235,7 +364,9 @@ export function DashboardOperationsClient({
       setOperation(prepared);
       setNotice(`${actionCopy(action)} is prepared.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not prepare operation.");
+      setError(
+        err instanceof Error ? err.message : "Could not prepare operation.",
+      );
     } finally {
       setIsPreparing(false);
     }
@@ -260,14 +391,13 @@ export function DashboardOperationsClient({
           operationId: preparedOperation.id,
           walletAddress,
         }),
-      }).then(
-        (response) =>
-          readApiResponse<
-            ContractOperationView & {
-              unsignedXdr?: string;
-              networkPassphrase?: string;
-            }
-          >(response),
+      }).then((response) =>
+        readApiResponse<
+          ContractOperationView & {
+            unsignedXdr?: string;
+            networkPassphrase?: string;
+          }
+        >(response),
       );
 
       if (!built.unsignedXdr || !built.networkPassphrase) {
@@ -301,7 +431,7 @@ export function DashboardOperationsClient({
 
   return (
     <section id="operations" className="mx-auto max-w-7xl px-5 py-8">
-      <BorderGlow className="glass-panel p-5 sm:p-6">
+      <Card padding="sm">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-cyan-100/70">
@@ -316,10 +446,31 @@ export function DashboardOperationsClient({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            {walletAddress ? (
+            {walletAddress && (
               <>
                 <NetworkBadge network={walletNetwork || "unknown"} />
-                <span className="font-mono text-sm">{formatStellarAddress(walletAddress)}</span>
+                <span className="font-mono text-sm">
+                  {formatStellarAddress(walletAddress)}
+                </span>
+                {contractReadiness && (
+                  <>
+                    {contractReadiness.businessVerified === true && (
+                      <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-medium text-cyan-100">
+                        Business ✓
+                      </span>
+                    )}
+                    {contractReadiness.debtorVerified === true && (
+                      <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-medium text-cyan-100">
+                        Debtor ✓
+                      </span>
+                    )}
+                    {contractReadiness.investorVerified === true && (
+                      <span className="rounded-full border border-cyan-400/30 bg-cyan-400/10 px-2 py-0.5 text-[10px] font-medium text-cyan-100">
+                        Investor ✓
+                      </span>
+                    )}
+                  </>
+                )}
                 <button
                   type="button"
                   onClick={handleDisconnectWallet}
@@ -328,21 +479,14 @@ export function DashboardOperationsClient({
                   Disconnect
                 </button>
               </>
-            ) : (
-              <button
-                type="button"
-                onClick={handleConnectWallet}
-                className="star-button inline-flex min-h-10 items-center rounded-full bg-cyan-200 px-5 text-sm font-semibold text-cyan-950 transition hover:bg-lime-200"
-              >
-                Connect Wallet
-              </button>
             )}
           </div>
         </div>
 
         {walletNetwork && !walletNetwork.includes("test") ? (
           <div className="mt-5 rounded-2xl border border-lime-200/12 bg-lime-200/5 px-4 py-3 text-sm text-lime-50/70">
-            Wallet network is {walletNetwork}. Switch to Stellar Testnet before signing.
+            Wallet network is {walletNetwork}. Switch to Stellar Testnet before
+            signing.
           </div>
         ) : null}
 
@@ -368,7 +512,9 @@ export function DashboardOperationsClient({
           <div className="overflow-hidden rounded-2xl border border-white/8 bg-black/20">
             <div className="flex items-center justify-between border-b border-white/8 px-4 py-3">
               <h3 className="font-semibold text-white">Role Offers</h3>
-              <span className="text-sm text-white/46">{offers.length} total</span>
+              <span className="text-sm text-white/46">
+                {offers.length} total
+              </span>
             </div>
 
             {offers.length > 0 ? (
@@ -376,10 +522,18 @@ export function DashboardOperationsClient({
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b border-white/8">
-                      <th className="px-4 py-3 font-semibold text-white/70">Offer</th>
-                      <th className="px-4 py-3 font-semibold text-white/70">Counterparty</th>
-                      <th className="px-4 py-3 font-semibold text-white/70">Amount</th>
-                      <th className="px-4 py-3 font-semibold text-white/70">Status</th>
+                      <th className="px-4 py-3 font-semibold text-white/70">
+                        Offer
+                      </th>
+                      <th className="px-4 py-3 font-semibold text-white/70">
+                        Counterparty
+                      </th>
+                      <th className="px-4 py-3 font-semibold text-white/70">
+                        Amount
+                      </th>
+                      <th className="px-4 py-3 font-semibold text-white/70">
+                        Status
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -393,17 +547,23 @@ export function DashboardOperationsClient({
                       >
                         <td className="px-4 py-4">
                           <p className="font-semibold text-white">{offer.id}</p>
-                          <p className="mt-1 text-xs text-white/46">{offer.category}</p>
+                          <p className="mt-1 text-xs text-white/46">
+                            {offer.category}
+                          </p>
                         </td>
-                        <td className="px-4 py-4 text-white/76">{offer.counterparty}</td>
-                        <td className="px-4 py-4">
-                          <p className="font-semibold text-white">{offer.amount}</p>
-                          <p className="mt-1 text-xs text-white/46">{offer.fundingPrice}</p>
+                        <td className="px-4 py-4 text-white/76">
+                          {offer.counterparty}
                         </td>
                         <td className="px-4 py-4">
-                          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white/70">
-                            {offer.status}
-                          </span>
+                          <p className="font-semibold text-white">
+                            {offer.amount}
+                          </p>
+                          <p className="mt-1 text-xs text-white/46">
+                            {offer.fundingPrice}
+                          </p>
+                        </td>
+                        <td className="px-4 py-4">
+                          <StatusBadge status={offer.status} />
                         </td>
                       </tr>
                     ))}
@@ -425,7 +585,9 @@ export function DashboardOperationsClient({
             />
 
             <div className="rounded-2xl border border-white/8 bg-black/20 p-4">
-              <p className="text-sm font-semibold text-white">Available Actions</p>
+              <p className="text-sm font-semibold text-white">
+                Available Actions
+              </p>
               <div className="mt-4 flex flex-wrap gap-3">
                 {role === "business" ? (
                   <a
@@ -436,17 +598,31 @@ export function DashboardOperationsClient({
                   </a>
                 ) : null}
 
-                {actions.map((action) => (
-                  <button
-                    key={action}
-                    type="button"
-                    disabled={isPreparing || !canRunAction(action, selectedOffer)}
-                    onClick={() => prepareOperation(action, selectedOffer?.id)}
-                    className="inline-flex min-h-10 items-center rounded-full border border-white/10 px-4 text-sm font-medium text-white/72 transition hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
-                  >
-                    {isPreparing ? "Preparing..." : actionCopy(action)}
-                  </button>
-                ))}
+                {actions.map((action) => {
+                  const isDisabled =
+                    isPreparing ||
+                    !walletAddress ||
+                    !canRunActionWithVerification(action, selectedOffer);
+
+                  return (
+                    <button
+                      key={action}
+                      type="button"
+                      disabled={isDisabled}
+                      onClick={() =>
+                        prepareOperation(action, selectedOffer?.id)
+                      }
+                      title={getActionDisabledTitle(
+                        action,
+                        contractReadiness,
+                        walletAddress,
+                      )}
+                      className="inline-flex min-h-10 items-center rounded-full border border-white/10 px-4 text-sm font-medium text-white/72 transition hover:bg-white/8 hover:text-white disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      {isPreparing ? "Preparing..." : actionCopy(action)}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -465,24 +641,40 @@ export function DashboardOperationsClient({
           </summary>
           <div className="mt-4 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-cyan-100/50">Network</p>
-              <p className="mt-2 font-mono text-white/76">{data.contracts.network}</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-cyan-100/50">
+                Network
+              </p>
+              <p className="mt-2 font-mono text-white/76">
+                {data.contracts.network}
+              </p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-cyan-100/50">Offer Registry</p>
-              <p className="mt-2 truncate font-mono text-white/76">{data.contracts.offerRegistry}</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-cyan-100/50">
+                Offer Registry
+              </p>
+              <p className="mt-2 truncate font-mono text-white/76">
+                {data.contracts.offerRegistry}
+              </p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-cyan-100/50">Marketplace</p>
-              <p className="mt-2 truncate font-mono text-white/76">{data.contracts.marketplace}</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-cyan-100/50">
+                Marketplace
+              </p>
+              <p className="mt-2 truncate font-mono text-white/76">
+                {data.contracts.marketplace}
+              </p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-cyan-100/50">Settlement</p>
-              <p className="mt-2 truncate font-mono text-white/76">{data.contracts.settlement}</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-cyan-100/50">
+                Settlement
+              </p>
+              <p className="mt-2 truncate font-mono text-white/76">
+                {data.contracts.settlement}
+              </p>
             </div>
           </div>
         </details>
-      </BorderGlow>
+      </Card>
     </section>
   );
 }
