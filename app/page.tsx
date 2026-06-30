@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BorderGlow } from "./components/border-glow";
+import { Card, SectionLabel as UISectionLabel, ArrowGlyph } from "./components/ui";
 import { Particles } from "./components/particles";
 import { ScrollParallax } from "./components/scroll-parallax";
 import { SiteNav } from "./components/site-nav";
@@ -77,21 +77,7 @@ const useCases = [
   "Embedded receivables funding",
 ];
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="section-label mx-auto mb-5 w-fit rounded-full px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">
-      {children}
-    </p>
-  );
-}
 
-function ArrowGlyph() {
-  return (
-    <span aria-hidden="true" className="ml-2 inline-block text-cyan-950">
-      -&gt;
-    </span>
-  );
-}
 
 function FloatingTerminal({
   side,
@@ -186,11 +172,7 @@ export default function Home() {
       <SiteNav activeRoute="home" />
 
       <section className="parallax-section relative mx-auto flex min-h-[1120px] max-w-7xl flex-col px-5 pb-20 pt-32 lg:min-h-[1180px] lg:pt-36">
-        <FloatingTerminal
-          side="left"
-          label="Invoice"
-          parallaxSpeed="-0.075"
-        />
+        <FloatingTerminal side="left" label="Invoice" parallaxSpeed="-0.075" />
         <FloatingTerminal
           side="right"
           label="Stablecoin"
@@ -202,14 +184,16 @@ export default function Home() {
           data-parallax
           data-parallax-speed="0.018"
         >
-          <SectionLabel>Verified receivables funding on Stellar</SectionLabel>
-          <h1 className="text-balance text-5xl font-semibold leading-[0.96] tracking-tight sm:text-7xl lg:text-8xl">
+          <UISectionLabel>
+            Verified receivables funding on Stellar
+          </UISectionLabel>
+          <h1 className="text-balance text-5xl font-semibold leading-[1.05] tracking-tight sm:text-7xl lg:text-8xl">
             Future payments{" "}
             <span className="ice-gradient">become present liquidity</span>
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-7 text-white/64 sm:text-lg sm:leading-8">
-            HorizonPay helps verified businesses create Funding Offers backed
-            by real invoices, services, subscriptions, products, and pay-later
+          <p className="mx-auto mt-6 max-w-2xl text-pretty text-base leading-7 text-white/64 sm:text-lg sm:leading-[1.7]">
+            HorizonPay helps verified businesses create Funding Offers backed by
+            real invoices, services, subscriptions, products, and pay-later
             agreements so investors can fund receivables with transparent terms.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -242,7 +226,10 @@ export default function Home() {
           data-parallax
           data-parallax-speed="-0.025"
         >
-          <BorderGlow className="glass-panel hero-info-panel grid gap-8 p-6 sm:p-8 lg:grid-cols-[0.85fr_1.15fr] lg:p-10">
+          <Card
+            variant="glass"
+            className="hero-info-panel grid gap-8 p-6 sm:p-8 lg:grid-cols-[0.85fr_1.15fr] lg:p-10"
+          >
             <div>
               <p className="mb-4 text-sm font-semibold uppercase tracking-[0.22em] text-cyan-100/70">
                 What is HorizonPay?
@@ -257,18 +244,21 @@ export default function Home() {
                 repayment terms, risk context, and verification status.
               </p>
               <div className="mt-7 flex flex-wrap gap-3">
-                <Link href="/onboarding" className="mini-action">
+                <Link href="/dashboard" className="mini-action">
                   Create verified Offers
                 </Link>
               </div>
             </div>
             <DebtStackObject />
-          </BorderGlow>
+          </Card>
         </section>
       </section>
 
-      <section id="products" className="parallax-section mx-auto max-w-7xl px-5 py-24">
-        <SectionLabel>HorizonPay marketplace</SectionLabel>
+      <section
+        id="products"
+        className="parallax-section mx-auto max-w-7xl px-5 py-24"
+      >
+        <UISectionLabel>HorizonPay marketplace</UISectionLabel>
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="text-balance text-4xl font-semibold tracking-tight sm:text-6xl">
             Verified Offers with{" "}
@@ -277,7 +267,7 @@ export default function Home() {
         </div>
         <div className="mt-12 grid gap-5 lg:grid-cols-3">
           {products.map((product, index) => (
-            <BorderGlow key={product.name} className="product-card glass-panel">
+            <Card key={product.name} variant="glass" className="product-card">
               <div
                 className={`product-object object-${index + 1}`}
                 data-parallax
@@ -290,13 +280,13 @@ export default function Home() {
               <p className="text-sm text-cyan-100/70">{product.name}</p>
               <h3 className="mt-3 text-2xl font-semibold">{product.title}</h3>
               <p className="mt-4 leading-7 text-white/58">{product.copy}</p>
-            </BorderGlow>
+            </Card>
           ))}
         </div>
       </section>
 
       <section className="parallax-section mx-auto max-w-7xl px-5 py-20">
-        <SectionLabel>Receivable examples</SectionLabel>
+        <UISectionLabel>Receivable examples</UISectionLabel>
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
           {traction.map((item) => (
             <div
@@ -311,8 +301,11 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="architecture" className="parallax-section mx-auto max-w-7xl px-5 py-24">
-        <SectionLabel>Receivable Offer lifecycle</SectionLabel>
+      <section
+        id="architecture"
+        className="parallax-section mx-auto max-w-7xl px-5 py-24"
+      >
+        <UISectionLabel>Receivable Offer lifecycle</UISectionLabel>
         <div className="architecture-stage">
           <div
             className="architecture-core"
@@ -326,24 +319,31 @@ export default function Home() {
           </div>
           <div className="grid gap-4 lg:grid-cols-4">
             {lifecycleSteps.map((item) => (
-              <BorderGlow key={item.step} className="glass-panel lifecycle-card">
+              <Card
+                key={item.step}
+                variant="glass"
+                className="lifecycle-card"
+              >
                 <p className="font-mono text-sm text-cyan-200">{item.step}</p>
                 <h3 className="mt-8 text-2xl font-semibold">{item.title}</h3>
                 <p className="mt-4 leading-7 text-white/58">{item.copy}</p>
-              </BorderGlow>
+              </Card>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="use-cases" className="parallax-section mx-auto max-w-7xl px-5 py-24">
-        <SectionLabel>Cash-flow powered use cases</SectionLabel>
+      <section
+        id="use-cases"
+        className="parallax-section mx-auto max-w-7xl px-5 py-24"
+      >
+        <UISectionLabel>Cash-flow powered use cases</UISectionLabel>
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="text-balance text-4xl font-semibold tracking-tight sm:text-6xl">
             Receivables funding for businesses that wait to get paid
           </h2>
         </div>
-        <BorderGlow className="glass-panel mt-12 grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4">
+        <Card variant="glass" className="mt-12 grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-4">
           {useCases.map((item) => (
             <div
               key={item}
@@ -353,14 +353,14 @@ export default function Home() {
               {item}
             </div>
           ))}
-        </BorderGlow>
+        </Card>
       </section>
 
       <section id="access" className="parallax-section px-5 pb-10 pt-20">
-        <BorderGlow className="glass-panel mx-auto max-w-7xl overflow-hidden p-7 sm:p-10 lg:p-14">
+        <Card variant="glass" padding="lg" className="mx-auto max-w-7xl overflow-hidden">
           <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <div>
-              <SectionLabel>Access HorizonPay</SectionLabel>
+              <UISectionLabel>Access HorizonPay</UISectionLabel>
               <h2 className="max-w-3xl text-balance text-4xl font-semibold tracking-tight sm:text-6xl">
                 Future promises to pay become present liquidity.
               </h2>
@@ -370,7 +370,7 @@ export default function Home() {
                 portfolio visibility from the same account flow.
               </p>
               <Link
-                href="/onboarding"
+                href="/dashboard"
                 className="star-button mt-9 inline-flex min-h-12 items-center rounded-full bg-cyan-200 px-6 text-sm font-semibold text-cyan-950 transition hover:bg-lime-200 focus:outline-none focus:ring-2 focus:ring-cyan-200 focus:ring-offset-2 focus:ring-offset-[#07110f]"
               >
                 Talk to the team <ArrowGlyph />
@@ -402,12 +402,12 @@ export default function Home() {
               <Link href="#architecture" className="hover:text-white">
                 Architecture
               </Link>
-              <Link href="/onboarding" className="hover:text-white">
+              <Link href="/dashboard" className="hover:text-white">
                 Access
               </Link>
             </div>
           </footer>
-        </BorderGlow>
+        </Card>
       </section>
     </main>
   );
