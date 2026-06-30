@@ -14,9 +14,10 @@ function badRequest(message: string) {
 }
 
 export async function POST(request: Request) {
-  const body = (await request.json().catch(() => null)) as
-    | { operationId?: string; walletAddress?: string }
-    | null;
+  const body = (await request.json().catch(() => null)) as {
+    operationId?: string;
+    walletAddress?: string;
+  } | null;
 
   if (!body?.operationId) return badRequest("Operation id is required.");
   if (!body.walletAddress) return badRequest("Wallet address is required.");
@@ -33,6 +34,7 @@ export async function POST(request: Request) {
       message: "Soroban transaction is ready for wallet signature.",
     });
   } catch (error) {
+    console.log("Error building Soroban transaction:", error);
     return Response.json(
       {
         success: false,
