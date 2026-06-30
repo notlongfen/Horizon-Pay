@@ -47,3 +47,7 @@ export {
   Modal,
   type ModalProps,
 } from "./modal";
+
+export {
+  ArrowGlyph,
+} from "./arrow-glyph";

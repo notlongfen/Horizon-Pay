@@ -7,20 +7,21 @@ type SiteNavProps = {
   ctaHref?: string;
   ctaLabel?: string;
   showCta?: boolean;
+  showWalletConnect?: boolean;
 };
 
 const pageRoutes = [
   { href: "/", label: "Home", route: "home" },
   { href: "/marketplace", label: "Offers", route: "marketplace" },
-  { href: "/onboarding", label: "Get started", route: "onboarding" },
-  { href: "/dashboard/business", label: "Dashboard", route: "dashboard" },
+  { href: "/dashboard", label: "Get started", route: "dashboard" },
 ] as const;
 
 export function SiteNav({
   activeRoute = "home",
-  ctaHref = "/onboarding",
-  ctaLabel = "Request access",
+  ctaHref = "/dashboard",
+  ctaLabel = "Get started",
   showCta = false,
+  showWalletConnect = true,
 }: SiteNavProps) {
   return (
     <ScrollNav>
@@ -52,7 +53,7 @@ export function SiteNav({
               {ctaLabel}
             </Link>
           )}
-          <WalletConnectButton />
+          {showWalletConnect && <WalletConnectButton />}
         </div>
       </nav>
     </ScrollNav>

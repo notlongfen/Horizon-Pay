@@ -34,7 +34,7 @@ interface WalletContextValue {
   // Actions
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
-  signTransaction: (params: { xdr: string; networkPassphrase: string }) => Promise<string>;
+  signTransaction: (params: { xdr: string; networkPassphrase: string }) => Promise<{ signedTxXdr: string; signerAddress?: string }>;
   getNetwork: () => Promise<string>;
   refreshAddress: () => Promise<void>;
   

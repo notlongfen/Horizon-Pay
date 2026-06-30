@@ -248,7 +248,7 @@ export function BorderGlow({
       onPointerMove={handlePointerMove}
       onPointerEnter={() => setIsHovered(true)}
       onPointerLeave={() => setIsHovered(false)}
-      className={`relative grid isolate border border-white/15 ${className}`}
+      className={`relative grid isolate border border-white/15 ${className} pointer-events-auto`}
       style={{
         background: backgroundColor,
         borderRadius: `${borderRadius}px`,
@@ -338,7 +338,7 @@ export function BorderGlow({
         />
       </span>
 
-      <div className="flex flex-col relative overflow-auto z-[1]">
+      <div className="flex flex-col relative overflow-auto z-[2]">
         {children}
       </div>
     </div>

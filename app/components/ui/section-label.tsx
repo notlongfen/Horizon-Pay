@@ -25,7 +25,7 @@ export function SectionLabel({
 
   return (
     <p
-      className={`section-label mb-5 w-fit rounded-full px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] ${opacityClass} ${className}`}
+      className={`section-label mb-5 w-fit rounded-full px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] ${opacityClass} ${className}`}
       {...props}
     >
       {children}

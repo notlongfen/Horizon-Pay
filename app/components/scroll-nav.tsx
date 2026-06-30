@@ -15,15 +15,26 @@ export function ScrollNav({ children }: ScrollNavProps) {
     if (!header) return;
 
     let ticking = false;
+    let prevScrollY = window.scrollY;
 
     const syncNav = () => {
       const currentY = window.scrollY;
 
+      // Determine scroll direction and update classes
+      const isScrollingDown = currentY > prevScrollY && currentY > 60;
+      const isScrollingUp = currentY < prevScrollY;
+
+      // Always track scrolled state for styling
       header.classList.toggle("is-scrolled", currentY > 16);
 
-      // We removed the hide-on-scroll-down logic to keep the nav sticky at all times
-      header.classList.remove("is-hidden");
+      // Hide only when scrolling down past threshold
+      if (isScrollingDown) {
+        header.classList.add("is-hidden");
+      } else if (isScrollingUp) {
+        header.classList.remove("is-hidden");
+      }
 
+      prevScrollY = currentY;
       ticking = false;
     };
 
