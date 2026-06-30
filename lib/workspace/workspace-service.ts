@@ -1,3 +1,5 @@
+import "server-only";
+
 import { getHorizonPayContracts } from "@/lib/contracts/horizonpay-contracts";
 import { getContractReadiness } from "@/lib/contracts/contract-readiness";
 import {
@@ -62,6 +64,40 @@ function requireInputField(fields: Record<string, string>, key: string, label: s
 
 function requirePositiveCents(value: bigint, label: string) {
   if (value <= BigInt(0)) throw new Error(`${label} must be greater than zero.`);
+}
+
+async function validateVerificationStatus(input: PrepareOperationInput) {
+  const prisma = getPrismaClient();
+  const wallet = input.walletAddress;
+
+  if (!wallet) return;
+
+  if (input.action === "Create Offer" || input.action === "List Offer") {
+    const business = await prisma.businessProfile.findUnique({
+      where: { walletAddress: wallet },
+    });
+    if (business?.verificationStatus !== "KYB_VERIFIED") {
+      throw new Error("Business must be KYB verified to create or list offers");
+    }
+  }
+
+  if (input.action === "Acknowledge" || input.action === "Repay" || input.action === "Repay Full") {
+    const debtor = await prisma.debtorProfile.findUnique({
+      where: { walletAddress: wallet },
+    });
+    if (debtor?.verificationStatus !== "KYC_VERIFIED") {
+      throw new Error("Debtor must be KYC verified to acknowledge or repay");
+    }
+  }
+
+  if (input.action === "Fund Offer") {
+    const investor = await prisma.investorProfile.findUnique({
+      where: { walletAddress: wallet },
+    });
+    if (investor?.verificationStatus !== "KYC_VERIFIED") {
+      throw new Error("Investor must be KYC verified to fund offers");
+    }
+  }
 }
 
 function validatePrepareInput(input: PrepareOperationInput) {
@@ -324,7 +360,7 @@ function buildRoleWorkspaces(
     ["DRAFT", "PENDING_DEBTOR_ACKNOWLEDGEMENT"].includes(offer.status),
   );
   const acknowledged = offers.filter((offer) =>
-    ["ACKNOWLEDGED", "ACTIVE", "LISTED", "FUNDED", "PARTIALLY_REPAID", "SETTLED", "REPAID"].includes(offer.status),
+    ["ACTIVE", "LISTED", "FUNDED", "PARTIALLY_REPAID", "SETTLED", "REPAID"].includes(offer.status),
   );
   const rows = offers.map(toOfferRow);
 
@@ -592,6 +628,7 @@ function operationFor(
 export async function prepareContractOperation(input: PrepareOperationInput) {
   const contracts = getHorizonPayContracts();
   validatePrepareInput(input);
+  await validateVerificationStatus(input);
 
   if (!process.env.DATABASE_URL) {
     const operation = operationFor(input);
@@ -630,7 +667,7 @@ export async function prepareContractOperation(input: PrepareOperationInput) {
         expectedRepaymentCents: principalAmountCents,
         repaymentAsset: fields.repaymentAsset || getDefaultRepaymentAssetContractId(),
         dueDate: fields.dueDate ? new Date(`${fields.dueDate}T00:00:00.000Z`) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        status: "DRAFT",
+        status: "PENDING_DEBTOR_ACKNOWLEDGEMENT",
         risk: "MODERATE",
         metadataHash: fields.metadataHash || `hp_meta_${publicId.toLowerCase()}`,
         offerRegistryContract: contracts.offerRegistry,
@@ -643,7 +680,7 @@ export async function prepareContractOperation(input: PrepareOperationInput) {
               name: fields.businessName || "Verified business",
               industry: fields.category || "Receivables",
               walletAddress: businessWallet,
-              verificationStatus: "KYB_VERIFIED",
+              verificationStatus: "PENDING",
               metadataHash: fields.metadataHash || `hp_business_${publicId.toLowerCase()}`,
             },
           },
@@ -800,10 +837,11 @@ async function applyConfirmedOperation(
     if (walletAddress) {
       await prisma.debtorProfile.upsert({
         where: { walletAddress },
-        update: {},
+        update: { verificationStatus: "KYC_VERIFIED" },
         create: {
           name: "Verified debtor",
           walletAddress,
+          verificationStatus: "KYC_VERIFIED",
           metadataHash: `hp_debtor_${txHash}`,
         },
       });
@@ -815,11 +853,11 @@ async function applyConfirmedOperation(
     if (walletAddress) {
       await prisma.investorProfile.upsert({
         where: { walletAddress },
-        update: { verificationStatus: "KYB_VERIFIED" },
+        update: { verificationStatus: "KYC_VERIFIED" },
         create: {
           name: "Verified investor",
           walletAddress,
-          verificationStatus: "KYB_VERIFIED",
+          verificationStatus: "KYC_VERIFIED",
           metadataHash: `hp_investor_${txHash}`,
         },
       });
@@ -847,7 +885,7 @@ async function applyConfirmedOperation(
   if (operation.method === "acknowledge_offer") {
     await prisma.offer.update({
       where: { id: operation.offerId },
-      data: { status: "ACKNOWLEDGED" },
+      data: { status: "ACTIVE" },
     });
   }
 
@@ -864,11 +902,11 @@ async function applyConfirmedOperation(
 
     const investor = await prisma.investorProfile.upsert({
       where: { walletAddress: operation.walletAddress ?? `investor-${txHash}` },
-      update: { verificationStatus: "KYB_VERIFIED" },
+      update: { verificationStatus: "KYC_VERIFIED" },
       create: {
         name: "Workspace investor",
         walletAddress: operation.walletAddress ?? `investor-${txHash}`,
-        verificationStatus: "KYB_VERIFIED",
+        verificationStatus: "KYC_VERIFIED",
         metadataHash: `hp_investor_${txHash}`,
       },
     });

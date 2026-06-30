@@ -1,30 +1,40 @@
 // Shared formatting utilities
 // Used across marketplace, workspace, and dashboard components
 
-const currencyFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
+// Helper to get currency formatter - recreate each time to avoid serialization issues
+function getCurrencyFormatter() {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
 
-const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "2-digit",
-  year: "numeric",
-});
+// Helper to get short date formatter - recreate each time to avoid serialization issues
+function getDateFormatter() {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
+}
 
-const longDateFormatter = new Intl.DateTimeFormat("en-US", {
-  month: "long",
-  day: "numeric",
-  year: "numeric",
-});
+// Helper to get long date formatter - recreate each time to avoid serialization issues
+function getLongDateFormatter() {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
 /**
  * Format cents to USD currency string
  * @example formatCents(1250) // "$12.50"
  */
 export function formatCents(cents: bigint | number): string {
-  return currencyFormatter.format(Number(cents) / 100);
+  return getCurrencyFormatter().format(Number(cents) / 100);
 }
 
 /**
@@ -41,14 +51,14 @@ export function centsFromDollarInput(value?: string, fallback = "0"): bigint {
  * Format date to short format (e.g., "Jan 15, 2025")
  */
 export function formatShortDate(date: Date): string {
-  return dateFormatter.format(date);
+  return getDateFormatter().format(date);
 }
 
 /**
  * Format date to long format (e.g., "January 15, 2025")
  */
 export function formatLongDate(date: Date): string {
-  return longDateFormatter.format(date);
+  return getLongDateFormatter().format(date);
 }
 
 /**

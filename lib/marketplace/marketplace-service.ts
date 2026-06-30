@@ -21,11 +21,7 @@ function riskLabel(risk: string): MarketplaceOffer["risk"] {
   return "Moderate";
 }
 
-function verificationLabel(status: string) {
-  if (status === "KYB_VERIFIED") return "KYB verified";
-  if (status === "SUSPENDED") return "Verification suspended";
-  return "Verification pending";
-}
+import { getVerificationLabel } from "@/lib/utils";
 
 async function queryOffersFromDatabase() {
   const prisma = getPrismaClient();
@@ -33,7 +29,7 @@ async function queryOffersFromDatabase() {
   return prisma.offer.findMany({
     where: {
       status: {
-        in: ["ACKNOWLEDGED", "LISTED", "FUNDED"],
+        in: ["ACTIVE", "LISTED", "FUNDED"],
       },
     },
     orderBy: [{ status: "desc" }, { dueDate: "asc" }],
@@ -64,9 +60,11 @@ function mapDbOfferToMarketplaceOffer(offer: DbOffer): MarketplaceOffer {
     risk: riskLabel(offer.risk),
     repaymentAsset: offer.repaymentAsset,
     status: statusLabel(offer.status),
-    verification: verificationLabel(offer.business.verificationStatus),
+    verification: getVerificationLabel(offer.business.verificationStatus),
     acknowledgement:
-      offer.status === "DRAFT" ? "Awaiting debtor" : "Debtor acknowledged",
+      ["DRAFT", "PENDING_DEBTOR_ACKNOWLEDGEMENT"].includes(offer.status) 
+        ? "Awaiting debtor" 
+        : "Debtor acknowledged",
     industry: offer.business.industry,
     dueInDays: `${dueInDays} days`,
     fundedShare: `${(offer.fundedBasisPoints / 100).toFixed(1)}%`,
