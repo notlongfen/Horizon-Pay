@@ -239,6 +239,7 @@ export function CreateOfferForm({
   industries,
 }: CreateOfferFormProps) {
   const router = useRouter();
+  
   const [formData, setFormData] = useState<FormData>(() =>
     createInitialFormData(businessProfile, defaultRepaymentAsset),
   );

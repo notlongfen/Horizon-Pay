@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BorderGlow } from "../components/border-glow";
+import { Card, SectionLabel as UISectionLabel, ArrowGlyph } from "../components/ui";
 import { Particles } from "../components/particles";
 import { ScrollParallax } from "../components/scroll-parallax";
 import { SiteNav } from "../components/site-nav";
 import { getMarketplaceData } from "@/lib/marketplace/marketplace-service";
 import { MarketplaceOfferBrowser } from "./marketplace-offer-browser";
+
 
 export const metadata: Metadata = {
   title: "Offer Marketplace | HorizonPay",
@@ -36,21 +37,7 @@ const evaluationPoints = [
   "Offer status from the registry",
 ];
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="section-label mb-5 w-fit rounded-full px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">
-      {children}
-    </p>
-  );
-}
 
-function ArrowGlyph() {
-  return (
-    <span aria-hidden="true" className="ml-2 inline-block text-cyan-950">
-      -&gt;
-    </span>
-  );
-}
 
 function MarketplaceObject() {
   return (
@@ -75,6 +62,7 @@ function MarketplaceObject() {
 }
 
 export default async function MarketplacePage() {
+  // Prefetch marketplace data for TanStack Query hydration
   const { offers, stats, contracts } = await getMarketplaceData();
   const offerStats = [
     { label: "Listed Offers", value: stats.listedOffers },
@@ -105,20 +93,16 @@ export default async function MarketplacePage() {
         alphaParticles
       />
 
-      <SiteNav
-        activeRoute="marketplace"
-        ctaHref="#access"
-        ctaLabel="Buyer access"
-      />
+      <SiteNav activeRoute="marketplace" />
 
       <section className="parallax-section mx-auto grid min-h-[760px] max-w-7xl gap-12 px-5 pb-20 pt-32 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:pt-36">
         <div data-parallax data-parallax-speed="0.014">
-          <SectionLabel>Verified Offer marketplace</SectionLabel>
-          <h1 className="max-w-4xl text-balance text-5xl font-semibold leading-[0.96] tracking-tight sm:text-7xl">
+          <UISectionLabel>Verified Offer marketplace</UISectionLabel>
+          <h1 className="max-w-4xl text-balance text-5xl font-semibold leading-[1.05] tracking-tight sm:text-7xl">
             Browse acknowledged receivables{" "}
             <span className="ice-gradient">before purchase</span>
           </h1>
-          <p className="mt-6 max-w-2xl text-pretty text-base leading-7 text-white/64 sm:text-lg sm:leading-8">
+          <p className="mt-6 max-w-2xl text-pretty text-base leading-7 text-white/64 sm:text-lg sm:leading-[1.7]">
             HorizonPay lists Offers only after a verified business
             creates the receivable and the debtor acknowledges the obligation.
             Buyers compare real-world backing, terms, due dates, and status
@@ -166,7 +150,7 @@ export default async function MarketplacePage() {
       <section className="parallax-section mx-auto max-w-7xl px-5 py-16">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {offerStats.map((stat) => (
-            <BorderGlow key={stat.label} className="glass-panel p-6">
+            <Card key={stat.label} variant="glass" padding="md">
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/60">
                 {stat.label}
               </p>
@@ -174,7 +158,7 @@ export default async function MarketplacePage() {
                 {stat.value}
               </p>
               <div className="mt-4 h-px bg-gradient-to-r from-cyan-400/30 to-transparent" />
-            </BorderGlow>
+            </Card>
           ))}
         </div>
       </section>
@@ -182,10 +166,10 @@ export default async function MarketplacePage() {
       <MarketplaceOfferBrowser offers={offers} />
 
       <section id="evaluate" className="parallax-section mx-auto max-w-7xl px-5 py-24">
-        <BorderGlow className="glass-panel overflow-hidden p-7 sm:p-10 lg:p-12">
+        <Card variant="glass" padding="lg" className="overflow-hidden">
           <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
             <div>
-              <SectionLabel>Buyer evaluation</SectionLabel>
+              <UISectionLabel>Buyer evaluation</UISectionLabel>
               <h2 className="text-balance text-4xl font-semibold tracking-tight sm:text-6xl">
                 Purchase starts with verification, not yield hype.
               </h2>
@@ -207,26 +191,25 @@ export default async function MarketplacePage() {
               ))}
             </div>
           </div>
-        </BorderGlow>
+        </Card>
       </section>
 
       <section id="access" className="parallax-section px-5 pb-10 pt-20">
-        <BorderGlow className="glass-panel mx-auto max-w-7xl overflow-hidden p-7 sm:p-10 lg:p-14">
+        <Card variant="glass" padding="lg" className="mx-auto max-w-7xl overflow-hidden">
           <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
             <div>
-              <SectionLabel>Buyer access</SectionLabel>
+              <UISectionLabel>Buyer access</UISectionLabel>
               <h2 className="max-w-3xl text-balance text-4xl font-semibold tracking-tight sm:text-6xl">
-                Request access before purchasing receivable Offers.
+                Start your verification to fund receivable Offers.
               </h2>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-white/62">
-                Purchase requests start with buyer verification, disclosure
-                acceptance, and clear allocation terms before capital moves.
+                Complete investor verification to access funding opportunities on HorizonPay.
               </p>
               <Link
-                href="/onboarding"
+                href="/dashboard"
                 className="star-button mt-9 inline-flex min-h-12 items-center rounded-full bg-cyan-200 px-6 text-sm font-semibold text-cyan-950 transition hover:bg-lime-200 focus:outline-none focus:ring-2 focus:ring-cyan-200 focus:ring-offset-2 focus:ring-offset-[#07110f]"
               >
-                Request buyer access <ArrowGlyph />
+                Get Started <ArrowGlyph />
               </Link>
             </div>
             <div
@@ -260,7 +243,7 @@ export default async function MarketplacePage() {
               </Link>
             </div>
           </footer>
-        </BorderGlow>
+        </Card>
       </section>
     </main>
   );
