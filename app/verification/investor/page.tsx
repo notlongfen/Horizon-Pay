@@ -123,7 +123,7 @@ export function InvestorVerificationClientPage({ initialWallet }: InvestorVerifi
     );
   }
 
-  if (!walletAddress) {
+  if (!walletAddress && !initialWallet) {
     return null; // Will redirect
   }
 
