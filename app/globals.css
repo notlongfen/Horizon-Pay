@@ -7,21 +7,71 @@
   --cyan-deep: #0087b7;
   --lime-ice: #d8ff8f;
   --glass: rgba(8, 20, 20, 0.56);
+  
+  /* Typography tokens for light-on-dark */
+  --text-body: 1rem;
+  --text-lead: 1.25rem;
+  --text-lg: 1.125rem;
+  --text-sm: 0.875rem;
+  --text-xs: 0.75rem;
+  
+  /* Line-heights - slightly increased for light-on-dark readability */
+  --leading-body: 1.6;
+  --leading-lead: 1.5;
+  --leading-tight: 1.1;
+  --leading-none: 1;
+  
+  /* Letter-spacing */
+  --tracking-label: 0.18em;
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+
+  /* Utility classes for typography */
+  .tracking-label {
+    letter-spacing: var(--tracking-label);
+  }
+
+  /* Fluid typography for brand pages */
+  .text-fluid-h1 {
+    font-size: clamp(2.5rem, 6vw + 1rem, 4.5rem);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .text-fluid-h2 {
+    font-size: clamp(2rem, 5vw + 0.5rem, 3.5rem);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+  }
+
+  .text-fluid-h3 {
+    font-size: clamp(1.5rem, 4vw + 0.25rem, 2.25rem);
+    line-height: var(--leading-tight);
+  }
+
+  /* Readability improvements for light-on-dark */
+  .text-body-readable {
+    line-height: var(--leading-body);
+    max-width: 65ch;
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-manrope, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
+  line-height: var(--leading-body);
+  letter-spacing: 0.005em;
   text-rendering: geometricPrecision;
+  font-kerning: normal;
+  font-variant-ligatures: common-ligatures;
 }
 
 ::selection {
@@ -70,8 +120,8 @@ main > section {
     rgba(4, 14, 15, 0.78);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    0 18px 70px rgba(0, 0, 0, 0.58),
-    0 0 56px rgba(43, 210, 255, 0.1);
+    0 8px 15px rgba(0, 0, 0, 0.58),
+    0 0 12px rgba(43, 210, 255, 0.1);
 }
 
 [data-parallax] {
@@ -181,9 +231,9 @@ main > section {
     rgba(4, 14, 15, 0.64);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    0 28px 90px rgba(0, 0, 0, 0.46),
-    0 0 70px rgba(43, 210, 255, 0.08);
-  backdrop-filter: blur(22px) saturate(140%);
+    0 4px 8px rgba(0, 0, 0, 0.46),
+    0 0 8px rgba(43, 210, 255, 0.08);
+  backdrop-filter: blur(16px) saturate(140%);
 }
 
 .glass-nav {
@@ -223,7 +273,7 @@ main > section {
   background: rgba(92, 246, 255, 0.14);
   color: #dffcff;
   font-size: 13px;
-  box-shadow: 0 0 28px rgba(50, 236, 255, 0.34);
+  box-shadow: 0 0 8px rgba(50, 236, 255, 0.34);
 }
 
 .site-nav-name {
@@ -451,16 +501,22 @@ main > section {
     rgba(0, 0, 0, 0.22);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    0 0 30px rgba(92, 246, 255, 0.15);
-  backdrop-filter: blur(16px);
+    0 0 8px rgba(92, 246, 255, 0.15);
+  backdrop-filter: blur(12px);
 }
 
+/* Text highlight colors - solid only, no gradient or text-shadow (AI tell elimination) */
+.text-cyan-ice {
+  color: var(--cyan-ice);
+}
+
+.text-lime-ice {
+  color: var(--lime-ice);
+}
+
+/* Legacy ice-gradient class - now uses solid color only */
 .ice-gradient {
-  background: linear-gradient(90deg, #bffbff 0%, #36e8ff 43%, #dcff95 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  text-shadow: 0 0 34px rgba(92, 246, 255, 0.16);
+  color: var(--cyan-ice);
 }
 
 .glass-button {
@@ -621,7 +677,7 @@ main > section {
   font-size: 12px;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.78);
-  box-shadow: 0 0 22px rgba(92, 246, 255, 0.14);
+  box-shadow: 0 0 8px rgba(92, 246, 255, 0.14);
   backdrop-filter: blur(14px);
 }
 
@@ -669,7 +725,7 @@ main > section {
   border: 1px solid rgba(92, 246, 255, 0.26);
   border-radius: 50%;
   transform: rotateX(64deg);
-  box-shadow: 0 0 42px rgba(92, 246, 255, 0.18);
+  box-shadow: 0 0 8px rgba(92, 246, 255, 0.18);
 }
 
 .stack-card {
@@ -900,8 +956,8 @@ main > section {
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.08);
   padding: 22px;
-  backdrop-filter: blur(18px);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.42);
 }
 
 .cta-ledger.secondary {
@@ -990,8 +1046,8 @@ main > section {
   font-size: 12px;
   font-weight: 700;
   color: #dffcff;
-  box-shadow: 0 0 28px rgba(92, 246, 255, 0.15);
-  backdrop-filter: blur(12px);
+  box-shadow: 0 0 8px rgba(92, 246, 255, 0.15);
+  backdrop-filter: blur(8px);
 }
 
 .marketplace-ack-pill {
@@ -1777,7 +1833,7 @@ main > section {
     linear-gradient(135deg, rgba(92, 246, 255, 0.13), rgba(255, 255, 255, 0.035)),
     rgba(0, 0, 0, 0.24);
   padding: 26px;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.32);
 }
 
 .onboarding-next-panel div:nth-child(2) {
@@ -3828,7 +3884,7 @@ main > section {
   font-weight: 800;
   color: #bffbff;
   letter-spacing: 0.04em;
-  text-shadow: 0 0 20px rgba(92, 246, 255, 0.48);
+  /* text-shadow removed for quieter treatment - AI tell elimination */
 }
 
 .ack-card {
@@ -3838,13 +3894,13 @@ main > section {
   border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 20px;
   background: rgba(4, 14, 15, 0.64);
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(12px);
   padding: 12px 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.36);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.36);
 }
 
 .ack-card-primary {
@@ -3897,7 +3953,7 @@ main > section {
   font-size: 13px;
   font-weight: 700;
   color: #bffbff;
-  box-shadow: 0 10px 40px rgba(92, 246, 255, 0.28);
+  box-shadow: 0 4px 8px rgba(92, 246, 255, 0.28);
 }
 
 .ack-summary-card {

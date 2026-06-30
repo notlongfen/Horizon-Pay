@@ -1,6 +1,15 @@
 import type { Metadata } from "next";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 import { WalletProvider } from "./components/wallet-provider";
+import { QueryProvider } from "./components/providers/query-provider";
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-manrope",
+  weight: ["300", "400", "500", "600", "700", "800"],
+});
 
 export const metadata: Metadata = {
   title: "HorizonPay | Verified receivables funding on Stellar",
@@ -35,12 +44,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en" className={`${manrope.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        <WalletProvider>
-          {children}
-        </WalletProvider>
-      </body>
+        <QueryProvider>
+          <WalletProvider>
+            {children}
+          </WalletProvider>
+        </QueryProvider>
+      {/* impeccable-live-start */}
+<script src="http://localhost:8400/live.js"></script>
+{/* impeccable-live-end */}
+</body>
     </html>
   );
 }
